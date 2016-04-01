@@ -19,7 +19,7 @@ def log(inp, quiet=0):
         print inp
 
 
-class pestilence():
+class blight():
     
         def __init__(self,laddr,port,strict,keyfile,certfile):
             self.laddr = laddr 
@@ -45,12 +45,14 @@ class pestilence():
         def transmission_server(self):
             #establish connection back or dipset 
             try:
+                
                 sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
                 sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
                 sock.bind((self.laddr,self.lport))
+                print "[#.#] Contaigion server started  %s:%d" % (self.laddr,self.lport)
             except Exception as e:
                 log("[x.x] Unable to bind to %s:%d" % (self.laddr,self.lport))
-                log("[>.>] Pestilence died: %s" % str(e))
+                log("[>.>] blight died: %s" % str(e))
                 sys.exit(-1)
     
             sock.listen(20)
@@ -83,7 +85,7 @@ class pestilence():
 
              except Exception as e:
                 log("[x.x] Unable to wrap SSL socket %s:%d" % (rhost,rport))
-                log("[>.>] Pestilence transmission failed!: %s" % str(e))
+                log("[>.>] blight transmission failed!: %s" % str(e))
                 sys.exit(-1)
 
              try:
@@ -179,8 +181,10 @@ class pestilence():
 
 if __name__ == "__main__":
 
+    print "<(X.X)> ~ blight ~ <(x.x)>\r\n"
+    print " ~ The fun is infectious   ~"
 
-    progDesc = ("<(x.x)> ~pestilence.py~ <(x.x)>\r\n"
+    progDesc = ("<(x.x)> ~blight.py~ <(x.x)>\r\n"
                 "Server for providing remote modules\n")
 
     argParser = argparse.ArgumentParser(description=progDesc)
@@ -192,5 +196,5 @@ if __name__ == "__main__":
     argParser.add_argument("-c","--certfile",help="Specify cert (.pem)",default="cert.pem")
 
     argv = argParser.parse_args()
-    p = pestilence(argv.ipaddr,argv.port,argv.strict,argv.keyfile,argv.certfile)
+    p = blight(argv.ipaddr,argv.port,argv.strict,argv.keyfile,argv.certfile)
 

